@@ -124,7 +124,8 @@ function fillClaude(text) {
     'div[role="textbox"]'
   ];
   
-  for (const selector of selectors) {
+  for (let i = 0; i < selectors.length; i++) {
+    const selector = selectors[i];
     const element = document.querySelector(selector);
     if (element) {
       console.log(`Found Claude input with selector: ${selector}`);
@@ -174,7 +175,8 @@ function fillGrok(text) {
     'div[role="textbox"]'
   ];
   
-  for (const selector of selectors) {
+  for (let i = 0; i < selectors.length; i++) {
+    const selector = selectors[i];
     const element = document.querySelector(selector);
     if (element) {
       console.log(`Found Grok input with selector: ${selector}`);
@@ -226,7 +228,8 @@ function clickSendButton(service) {
       'button:has(svg[width="32"])'
     ];
     
-    for (const selector of selectors) {
+    for (let i = 0; i < selectors.length; i++) {
+      const selector = selectors[i];
       sendButton = document.querySelector(selector);
       if (sendButton && !sendButton.disabled) {
         console.log(`Found ChatGPT send button with selector: ${selector}`);
@@ -243,7 +246,8 @@ function clickSendButton(service) {
       'button.bg-black'
     ];
     
-    for (const selector of selectors) {
+    for (let i = 0; i < selectors.length; i++) {
+      const selector = selectors[i];
       sendButton = document.querySelector(selector);
       if (sendButton) {
         console.log(`Found Claude send button with selector: ${selector}`);
@@ -260,7 +264,8 @@ function clickSendButton(service) {
       'button.send-button'
     ];
     
-    for (const selector of selectors) {
+    for (let i = 0; i < selectors.length; i++) {
+      const selector = selectors[i];
       sendButton = document.querySelector(selector);
       if (sendButton) {
         console.log(`Found Grok send button with selector: ${selector}`);
