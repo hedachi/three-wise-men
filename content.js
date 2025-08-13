@@ -4,8 +4,10 @@ console.log('AI Multi-Sender content script loaded on:', window.location.hostnam
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Received message:', request);
   if (request.action === 'fillText') {
-    const result = fillTextIntoInput(request.text);
-    sendResponse({ success: result });
+    setTimeout(() => {
+      const result = fillTextIntoInput(request.text);
+      sendResponse({ success: result });
+    }, 1000); // Wait 1 second for page elements to load
   }
   return true;
 });
@@ -13,12 +15,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function fillTextIntoInput(text) {
   const hostname = window.location.hostname;
   console.log('Attempting to fill text on:', hostname);
-  
-  // Wait for page to be ready
-  if (document.readyState !== 'complete') {
-    window.addEventListener('load', () => fillTextIntoInput(text));
-    return false;
-  }
   
   let success = false;
   
@@ -34,37 +30,82 @@ function fillTextIntoInput(text) {
 }
 
 function fillChatGPT(text) {
-  // ChatGPT specific filling
-  const selectors = [
-    '#prompt-textarea',
-    'textarea[placeholder*="Message"]',
-    'textarea[data-id="prompt-textarea"]',
-    'textarea[id="prompt-textarea"]'
-  ];
+  console.log('Trying to fill ChatGPT...');
   
-  for (const selector of selectors) {
-    const element = document.querySelector(selector);
-    if (element) {
-      element.focus();
-      element.value = text;
-      
-      // Trigger React events
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-      nativeInputValueSetter.call(element, text);
-      
-      const event = new Event('input', { bubbles: true });
-      element.dispatchEvent(event);
-      
-      console.log('ChatGPT: Text filled successfully');
-      return true;
+  // Wait and retry approach for ChatGPT
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  const tryFill = setInterval(() => {
+    attempts++;
+    console.log(`ChatGPT attempt ${attempts}`);
+    
+    // Updated selectors for ChatGPT
+    const selectors = [
+      'textarea#prompt-textarea',
+      'textarea[placeholder*="Message"]',
+      'textarea[data-id="prompt-textarea"]',
+      'div[id="prompt-textarea"]',
+      'textarea.m-0',
+      'textarea[rows]'
+    ];
+    
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        console.log(`Found ChatGPT input with selector: ${selector}`);
+        clearInterval(tryFill);
+        
+        // Focus and click
+        element.focus();
+        element.click();
+        
+        // For textarea elements
+        if (element.tagName === 'TEXTAREA') {
+          // Set value directly
+          element.value = text;
+          
+          // Trigger React's onChange
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          nativeInputValueSetter.call(element, text);
+          
+          // Dispatch events
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+          element.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          // For contenteditable divs
+          element.textContent = text;
+          element.dispatchEvent(new InputEvent('input', {
+            bubbles: true,
+            cancelable: true,
+            inputType: 'insertText',
+            data: text
+          }));
+        }
+        
+        // Auto-send after a short delay
+        setTimeout(() => {
+          clickSendButton('chatgpt');
+        }, 500);
+        
+        console.log('ChatGPT: Text filled successfully');
+        return true;
+      }
     }
-  }
+    
+    if (attempts >= maxAttempts) {
+      clearInterval(tryFill);
+      console.log('ChatGPT: Could not find input element after', maxAttempts, 'attempts');
+      return false;
+    }
+  }, 500);
   
-  console.log('ChatGPT: Could not find input element');
-  return false;
+  return true; // Return true since we're handling async
 }
 
 function fillClaude(text) {
+  console.log('Trying to fill Claude...');
+  
   // Claude specific filling
   const selectors = [
     'div.ProseMirror',
@@ -75,6 +116,8 @@ function fillClaude(text) {
   for (const selector of selectors) {
     const element = document.querySelector(selector);
     if (element) {
+      console.log(`Found Claude input with selector: ${selector}`);
+      
       element.focus();
       element.click();
       
@@ -95,6 +138,11 @@ function fillClaude(text) {
       });
       element.dispatchEvent(event);
       
+      // Auto-send after a short delay
+      setTimeout(() => {
+        clickSendButton('claude');
+      }, 500);
+      
       console.log('Claude: Text filled successfully');
       return true;
     }
@@ -105,6 +153,8 @@ function fillClaude(text) {
 }
 
 function fillGrok(text) {
+  console.log('Trying to fill Grok...');
+  
   // Grok specific filling
   const selectors = [
     'textarea',
@@ -116,6 +166,8 @@ function fillGrok(text) {
   for (const selector of selectors) {
     const element = document.querySelector(selector);
     if (element) {
+      console.log(`Found Grok input with selector: ${selector}`);
+      
       element.focus();
       
       if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
@@ -133,6 +185,11 @@ function fillGrok(text) {
         element.dispatchEvent(event);
       }
       
+      // Auto-send after a short delay
+      setTimeout(() => {
+        clickSendButton('grok');
+      }, 500);
+      
       console.log('Grok: Text filled successfully');
       return true;
     }
@@ -140,6 +197,88 @@ function fillGrok(text) {
   
   console.log('Grok: Could not find input element');
   return false;
+}
+
+function clickSendButton(service) {
+  console.log(`Trying to click send button for ${service}...`);
+  
+  let sendButton = null;
+  
+  if (service === 'chatgpt') {
+    // ChatGPT send button selectors
+    const selectors = [
+      'button[data-testid="send-button"]',
+      'button[aria-label*="Send"]',
+      'button svg[width="32"][height="32"]', // The send icon button
+      'button.rounded-xl.bg-black',
+      'button[disabled]:has(svg)',
+      'button:has(svg[width="32"])'
+    ];
+    
+    for (const selector of selectors) {
+      sendButton = document.querySelector(selector);
+      if (sendButton && !sendButton.disabled) {
+        console.log(`Found ChatGPT send button with selector: ${selector}`);
+        break;
+      }
+    }
+  } else if (service === 'claude') {
+    // Claude send button selectors
+    const selectors = [
+      'button[aria-label*="Send"]',
+      'button[aria-label*="send"]',
+      'button:has(svg):last-of-type',
+      'button[type="submit"]',
+      'button.bg-black'
+    ];
+    
+    for (const selector of selectors) {
+      sendButton = document.querySelector(selector);
+      if (sendButton) {
+        console.log(`Found Claude send button with selector: ${selector}`);
+        break;
+      }
+    }
+  } else if (service === 'grok') {
+    // Grok send button selectors
+    const selectors = [
+      'button[aria-label*="Send"]',
+      'button[aria-label*="send"]',
+      'button:has(svg)',
+      'button[type="submit"]',
+      'button.send-button'
+    ];
+    
+    for (const selector of selectors) {
+      sendButton = document.querySelector(selector);
+      if (sendButton) {
+        console.log(`Found Grok send button with selector: ${selector}`);
+        break;
+      }
+    }
+  }
+  
+  if (sendButton) {
+    console.log(`Clicking send button for ${service}`);
+    sendButton.click();
+    return true;
+  } else {
+    console.log(`Could not find send button for ${service}`);
+    // Try pressing Enter as fallback
+    const activeElement = document.activeElement;
+    if (activeElement) {
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true
+      });
+      activeElement.dispatchEvent(enterEvent);
+      console.log(`Tried pressing Enter for ${service}`);
+    }
+    return false;
+  }
 }
 
 // Check for pending text on page load
@@ -151,6 +290,6 @@ window.addEventListener('load', async () => {
       fillTextIntoInput(result.pendingText);
       // Clear pending text
       chrome.storage.local.remove(['pendingText']);
-    }, 2000); // Wait 2 seconds for page to fully load
+    }, 3000); // Wait 3 seconds for page to fully load
   }
 });
