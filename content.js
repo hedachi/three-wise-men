@@ -40,57 +40,68 @@ function fillChatGPT(text) {
     attempts++;
     console.log(`ChatGPT attempt ${attempts}`);
     
-    // Updated selectors for ChatGPT
-    const selectors = [
-      'textarea#prompt-textarea',
-      'textarea[placeholder*="Message"]',
-      'textarea[data-id="prompt-textarea"]',
-      'div[id="prompt-textarea"]',
-      'textarea.m-0',
-      'textarea[rows]'
-    ];
-    
-    for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log(`Found ChatGPT input with selector: ${selector}`);
-        clearInterval(tryFill);
-        
-        // Focus and click
-        element.focus();
-        element.click();
-        
-        // For textarea elements
-        if (element.tagName === 'TEXTAREA') {
-          // Set value directly
-          element.value = text;
+    try {
+      // Updated selectors for ChatGPT
+      const selectors = [
+        'textarea#prompt-textarea',
+        'textarea[placeholder*="Message"]',
+        'textarea[data-id="prompt-textarea"]',
+        'div[id="prompt-textarea"]',
+        'textarea.m-0',
+        'textarea[rows]'
+      ];
+      
+      for (let i = 0; i < selectors.length; i++) {
+        const selector = selectors[i];
+        const element = document.querySelector(selector);
+        if (element) {
+          console.log(`Found ChatGPT input with selector: ${selector}`);
+          clearInterval(tryFill);
           
-          // Trigger React's onChange
-          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
-          nativeInputValueSetter.call(element, text);
+          // Focus and click
+          element.focus();
+          element.click();
           
-          // Dispatch events
-          element.dispatchEvent(new Event('input', { bubbles: true }));
-          element.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-          // For contenteditable divs
-          element.textContent = text;
-          element.dispatchEvent(new InputEvent('input', {
-            bubbles: true,
-            cancelable: true,
-            inputType: 'insertText',
-            data: text
-          }));
+          // For textarea elements
+          if (element.tagName === 'TEXTAREA') {
+            // Set value directly
+            element.value = text;
+            
+            // Trigger React's onChange - wrapped in try-catch
+            try {
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+              if (nativeInputValueSetter) {
+                nativeInputValueSetter.call(element, text);
+              }
+            } catch (e) {
+              console.log('Could not use native setter, using fallback');
+            }
+            
+            // Dispatch events
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            // For contenteditable divs
+            element.textContent = text;
+            element.dispatchEvent(new InputEvent('input', {
+              bubbles: true,
+              cancelable: true,
+              inputType: 'insertText',
+              data: text
+            }));
+          }
+          
+          // Auto-send after a short delay
+          setTimeout(() => {
+            clickSendButton('chatgpt');
+          }, 500);
+          
+          console.log('ChatGPT: Text filled successfully');
+          return true;
         }
-        
-        // Auto-send after a short delay
-        setTimeout(() => {
-          clickSendButton('chatgpt');
-        }, 500);
-        
-        console.log('ChatGPT: Text filled successfully');
-        return true;
       }
+    } catch (error) {
+      console.error('Error in ChatGPT fill attempt:', error);
     }
     
     if (attempts >= maxAttempts) {
