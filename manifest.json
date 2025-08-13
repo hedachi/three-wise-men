@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "AI Multi-Sender",
+  "version": "1.0",
+  "description": "Send your questions to ChatGPT, Claude, and Grok simultaneously",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "clipboardWrite",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://grok.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://grok.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
