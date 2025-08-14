@@ -1,4 +1,4 @@
-# AI Multi-Sender Chrome Extension - Development Notes
+# 東方の三賢者 (Three Wise Men) Chrome Extension - Development Notes
 
 ## 概要
 このChrome拡張機能は、ChatGPT、Claude、Grokの3つのAIサービスに同じ質問を同時に送信するツールです。
@@ -85,7 +85,7 @@ nativeInputValueSetter.call(element, text);
 3. **各AIサイト**: F12でcontent.jsのログ確認
 
 ### 主要なログメッセージ
-- `"AI Multi-Sender content script loaded"` - content.js読み込み完了
+- `"Three Wise Men content script loaded"` - content.js読み込み完了
 - `"Found [service] input with selector:"` - 入力欄発見
 - `"Clicking send button for [service]"` - 送信ボタンクリック
 - `"Cleared ChatGPT input field"` - 入力欄クリア完了
@@ -121,7 +121,7 @@ nativeInputValueSetter.call(element, text);
 3. または Cmd+R (Mac) / Ctrl+R (Windows)
 
 ## リポジトリ
-https://github.com/hedachi/ai-multi-sender
+https://github.com/hedachi/three-wise-men
 
 ## ライセンス
 未設定（必要に応じて追加してください）

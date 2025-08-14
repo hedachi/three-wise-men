@@ -1,11 +1,11 @@
-# AI Multi-Sender Chrome Extension
+# 東方の三賢者 (Three Wise Men) - Chrome Extension
 
 ## インストール方法
 
 1. Chrome で `chrome://extensions/` を開く
 2. 右上の「デベロッパーモード」をON
 3. 「パッケージ化されていない拡張機能を読み込む」をクリック
-4. `ai-multi-sender` フォルダを選択
+4. このフォルダを選択
 
 ## 使い方
 
@@ -20,7 +20,7 @@
 ### エラーが発生した場合
 
 1. **拡張機能のエラー確認**
-   - `chrome://extensions/` で「AI Multi-Sender」を探す
+   - `chrome://extensions/` で「東方の三賢者」を探す
    - 「エラー」ボタンがあればクリック
 
 2. **Service Worker のログ確認**
@@ -30,7 +30,7 @@
 3. **各サイトでのログ確認**
    - AIサイトを開いて F12
    - Console タブで以下を確認：
-     - "AI Multi-Sender content script loaded" メッセージ
+     - "Three Wise Men content script loaded" メッセージ
      - "Received message" メッセージ
      - エラーメッセージ
 

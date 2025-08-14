@@ -1,4 +1,4 @@
-console.log('AI Multi-Sender content script loaded on:', window.location.hostname);
+console.log('Three Wise Men content script loaded on:', window.location.hostname);
 
 // Listen for messages
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

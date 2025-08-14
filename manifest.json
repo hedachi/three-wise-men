@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI Multi-Sender",
+  "name": "東方の三賢者",
   "version": "1.0",
-  "description": "Send your questions to ChatGPT, Claude, and Grok simultaneously",
+  "description": "ChatGPT、Claude、Grokの3つのAIに同時に質問を送信",
   "permissions": [
     "tabs",
     "storage",
