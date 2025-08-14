@@ -279,6 +279,32 @@ function clickSendButton(service) {
   if (sendButton) {
     console.log(`Clicking send button for ${service}`);
     sendButton.click();
+    
+    // Clear ChatGPT input after sending
+    if (service === 'chatgpt') {
+      setTimeout(() => {
+        const inputSelectors = [
+          'textarea#prompt-textarea',
+          'textarea[placeholder*="Message"]',
+          'textarea[data-id="prompt-textarea"]',
+          'textarea.m-0',
+          'textarea[rows]'
+        ];
+        
+        for (let i = 0; i < inputSelectors.length; i++) {
+          const input = document.querySelector(inputSelectors[i]);
+          if (input) {
+            input.value = '';
+            // Trigger events to ensure React knows the value changed
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('Cleared ChatGPT input field');
+            break;
+          }
+        }
+      }, 100); // Wait 100ms after clicking send
+    }
+    
     return true;
   } else {
     console.log(`Could not find send button for ${service}`);
