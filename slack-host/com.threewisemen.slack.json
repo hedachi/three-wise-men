@@ -1,0 +1,9 @@
+{
+  "name": "com.threewisemen.slack",
+  "description": "Three Wise Men Slack Integration",
+  "path": "/Users/hedachi/claude_code_workspace/three-wise-men/slack-host/host.js",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://YOUR_EXTENSION_ID/"
+  ]
+}

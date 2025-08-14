@@ -1,9 +1,121 @@
 // Store conversation URLs temporarily
 const conversationUrls = new Map();
 
+// Native Messaging connection
+let nativePort = null;
+
+// Connect to Native Messaging host
+function connectToNativeHost() {
+  try {
+    // Check if chrome.runtime.lastError exists before connecting
+    if (chrome.runtime.lastError) {
+      console.log('Previous error cleared:', chrome.runtime.lastError.message);
+    }
+    
+    nativePort = chrome.runtime.connectNative('com.threewisemen.slack');
+    
+    nativePort.onMessage.addListener((message) => {
+      console.log('Received from native host:', message);
+      
+      if (message.type === 'question') {
+        // Handle question from Slack
+        handleSlackQuestion(message);
+      } else if (message.type === 'connected') {
+        console.log('Slack host connected:', message.message);
+      } else if (message.type === 'error') {
+        console.error('Slack host error:', message.message);
+      }
+    });
+    
+    nativePort.onDisconnect.addListener(() => {
+      if (chrome.runtime.lastError) {
+        console.log('Native host not found or disconnected:', chrome.runtime.lastError.message);
+      } else {
+        console.log('Native host disconnected');
+      }
+      nativePort = null;
+      // Don't automatically reconnect - it will spam the console
+      // User needs to install the native host first
+    });
+    
+    // Send initial ping
+    nativePort.postMessage({ type: 'ready' });
+    
+  } catch (error) {
+    console.log('Native messaging host not installed. Slack integration disabled.');
+    console.log('To enable Slack integration, follow the setup instructions in slack-host/README.md');
+    nativePort = null;
+  }
+}
+
+// Handle question from Slack
+async function handleSlackQuestion(message) {
+  const { text, user, channel, timestamp } = message;
+  console.log(`Slack question from ${user}: ${text}`);
+  
+  // Save to history
+  const result = await chrome.storage.local.get(['history']);
+  let history = result.history || [];
+  
+  const historyEntry = {
+    text: text,
+    timestamp: Date.parse(timestamp),
+    source: 'slack',
+    user: user,
+    channel: channel,
+    urls: {}
+  };
+  
+  history.unshift(historyEntry);
+  history = history.slice(0, 50);
+  await chrome.storage.local.set({ history });
+  
+  // Clear conversation URLs and set new question
+  conversationUrls.clear();
+  conversationUrls.set('question', text);
+  conversationUrls.set('timestamp', Date.parse(timestamp));
+  
+  // Open tabs and fill text
+  await openTabsAndFillText(text);
+  
+  // Send confirmation back to Slack
+  if (nativePort) {
+    nativePort.postMessage({
+      type: 'response',
+      message: 'Question sent to AI services'
+    });
+  }
+}
+
+// Initialize Native Messaging connection on startup
+connectToNativeHost();
+
+// Reconnect on extension startup/update
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Extension started, reconnecting to native host...');
+  connectToNativeHost();
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('Extension installed/updated, connecting to native host...');
+  connectToNativeHost();
+});
+
 // Handle messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
-  if (request.action === 'openAndFill') {
+  if (request.action === 'checkSlackStatus') {
+    // Return Slack connection status
+    sendResponse({ connected: nativePort !== null });
+    return true;
+  } else if (request.action === 'reconnectSlack') {
+    // Manual reconnect request from popup
+    console.log('Manual reconnect requested');
+    connectToNativeHost();
+    setTimeout(() => {
+      sendResponse({ connected: nativePort !== null });
+    }, 500);
+    return true;
+  } else if (request.action === 'openAndFill') {
     // Clear previous conversation URLs for new question
     conversationUrls.clear();
     conversationUrls.set('question', request.text);
@@ -123,25 +235,20 @@ async function openTabsAndFillText(text) {
       if (tabId === tab.id && info.status === 'complete') {
         chrome.tabs.onUpdated.removeListener(listener);
         
-        // Inject content script and send message
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        }, () => {
-          // Wait a bit for content script to load
-          setTimeout(() => {
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'fillText',
-              text: text
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                console.log('Error:', chrome.runtime.lastError.message);
-              } else {
-                console.log('Text sent to tab:', tab.id);
-              }
-            });
-          }, 1000);
-        });
+        // Content script is already injected via manifest.json
+        // Just send the message
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'fillText',
+            text: text
+          }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.log('Error:', chrome.runtime.lastError.message);
+            } else {
+              console.log('Text sent to tab:', tab.id);
+            }
+          });
+        }, 1000);
       }
     });
   }

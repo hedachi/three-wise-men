@@ -1,5 +1,13 @@
 # 東方の三賢者 (Three Wise Men) Chrome Extension - Development Notes
 
+## 重要な開発ルール
+
+### ⚠️ 必須：manifest.jsonのバージョン更新
+**Chrome拡張機能のコードを変更した場合は、必ず`./update_version.sh`を実行してバージョンを更新すること。**
+- これを忘れるとChromeが変更を認識せず、古いコードが実行される
+- ポップアップが表示されない等の問題の原因になる
+- コマンド: `./update_version.sh`
+
 ## 概要
 このChrome拡張機能は、ChatGPT、Claude、Grokの3つのAIサービスに同じ質問を同時に送信するツールです。
 

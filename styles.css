@@ -25,6 +25,32 @@ h1 {
   font-family: monospace;
 }
 
+.slack-status {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+  padding: 5px;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.status-icon {
+  font-size: 10px;
+}
+
+.status-icon.connected {
+  color: #4CAF50;
+}
+
+.status-icon.disconnected {
+  color: #f44336;
+}
+
 #questionInput {
   width: 100%;
   padding: 10px;

@@ -2,10 +2,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   const questionInput = document.getElementById('questionInput');
   const sendButton = document.getElementById('sendButton');
   const historyList = document.getElementById('historyList');
+  const statusIcon = document.getElementById('statusIcon');
+  const statusText = document.getElementById('statusText');
 
   // Display version
   const manifest = chrome.runtime.getManifest();
   document.getElementById('version').textContent = `v${manifest.version}`;
+
+  // Check Slack connection status
+  function checkSlackStatus() {
+    chrome.runtime.sendMessage({ action: 'checkSlackStatus' }, (response) => {
+      if (response && response.connected) {
+        statusIcon.className = 'status-icon connected';
+        statusText.textContent = 'Slack: 接続済み';
+      } else {
+        statusIcon.className = 'status-icon disconnected';
+        statusText.textContent = 'Slack: 未接続';
+      }
+    });
+  }
+  
+  // Check status on load and every 5 seconds
+  checkSlackStatus();
+  setInterval(checkSlackStatus, 5000);
 
   // Load and display history
   await loadHistory();

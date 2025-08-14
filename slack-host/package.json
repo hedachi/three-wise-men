@@ -1,0 +1,14 @@
+{
+  "name": "three-wise-men-slack-host",
+  "version": "1.0.0",
+  "description": "Native messaging host for Three Wise Men Chrome extension",
+  "main": "host.js",
+  "scripts": {
+    "start": "node host.js",
+    "install-host": "node install.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.15.0",
+    "dotenv": "^16.3.1"
+  }
+}

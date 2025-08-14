@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "東方の三賢者",
-  "version": "1.2025.814.1637",
+  "version": "1.2025.814.1831",
   "description": "ChatGPT、Claude、Grokの3つのAIに同時に質問を送信",
   "permissions": [
     "tabs",
     "storage",
     "scripting",
     "clipboardWrite",
-    "activeTab"
+    "activeTab",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",
