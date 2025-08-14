@@ -3,8 +3,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sendButton = document.getElementById('sendButton');
   const historyList = document.getElementById('historyList');
 
+  // Display version
+  const manifest = chrome.runtime.getManifest();
+  document.getElementById('version').textContent = `v${manifest.version}`;
+
   // Load and display history
   await loadHistory();
+  
+  // Listen for storage changes to update history when URLs are added
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.history) {
+      console.log('History changed, reloading...');
+      loadHistory();
+    }
+  });
 
   // Send button click handler
   sendButton.addEventListener('click', async () => {
@@ -13,11 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       alert('質問を入力してください');
       return;
     }
-
-    // Save to history
-    await saveToHistory(question);
     
-    // Send message to background script
+    // Send message to background script (history is now saved there)
     chrome.runtime.sendMessage({
       action: 'openAndFill',
       text: question
@@ -27,9 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Clear input
     questionInput.value = '';
-    
-    // Reload history
-    await loadHistory();
     
     // Close popup after a moment
     setTimeout(() => {
@@ -49,6 +55,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await chrome.storage.local.get(['history']);
     const history = result.history || [];
     
+    console.log('Loading history, items:', history.length);
+    if (history.length > 0) {
+      console.log('First history item:', history[0]);
+    }
+    
     if (history.length === 0) {
       historyList.innerHTML = '<div class="empty-history">履歴はありません</div>';
       return;
@@ -63,29 +74,50 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? item.text.substring(0, 50) + '...' 
           : item.text;
         
+        // Debug log for URLs
+        console.log(`History item for "${truncatedText}":`, item.urls);
+        
+        // Create AI link buttons if URLs exist
+        let aiButtons = '';
+        if (item.urls) {
+          console.log('Creating buttons for URLs:', item.urls);
+          aiButtons = '<div class="ai-buttons">';
+          if (item.urls.chatgpt) {
+            aiButtons += `<button class="ai-link-btn chatgpt-btn" data-url="${item.urls.chatgpt}" title="ChatGPTの回答を見る">ChatGPT</button>`;
+          }
+          if (item.urls.claude) {
+            aiButtons += `<button class="ai-link-btn claude-btn" data-url="${item.urls.claude}" title="Claudeの回答を見る">Claude</button>`;
+          }
+          if (item.urls.grok) {
+            aiButtons += `<button class="ai-link-btn grok-btn" data-url="${item.urls.grok}" title="Grokの回答を見る">Grok</button>`;
+          }
+          aiButtons += '</div>';
+        } else {
+          console.log('No URLs found for this history item');
+        }
+        
         return `
-          <div class="history-item" data-text="${item.text.replace(/"/g, '&quot;')}">
-            <div class="history-time">${timeStr}</div>
-            ${truncatedText}
+          <div class="history-item-container">
+            <div class="history-item" data-text="${item.text.replace(/"/g, '&quot;')}">
+              <div class="history-time">${timeStr}</div>
+              ${truncatedText}
+            </div>
+            ${aiButtons}
           </div>
         `;
       })
       .join('');
-  }
-
-  // Save to history
-  async function saveToHistory(text) {
-    const result = await chrome.storage.local.get(['history']);
-    let history = result.history || [];
-    
-    history.unshift({
-      text: text,
-      timestamp: Date.now()
+      
+    // Add click handlers for AI link buttons
+    document.querySelectorAll('.ai-link-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const url = e.target.dataset.url;
+        if (url) {
+          chrome.tabs.create({ url: url });
+        }
+      });
     });
-    
-    history = history.slice(0, 50);
-    
-    await chrome.storage.local.set({ history });
   }
 
   // Enable Enter key to send

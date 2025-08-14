@@ -1,16 +1,97 @@
 console.log('Three Wise Men content script loaded on:', window.location.hostname);
 
+// Track the question text and monitor URL changes
+let currentQuestion = null;
+let urlCheckInterval = null;
+
 // Listen for messages
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   console.log('Received message:', request);
   if (request.action === 'fillText') {
+    currentQuestion = request.text;
     setTimeout(() => {
       const result = fillTextIntoInput(request.text);
       sendResponse({ success: result });
+      // Start monitoring URL changes after sending
+      startUrlMonitoring();
     }, 1000); // Wait 1 second for page elements to load
   }
   return true;
 });
+
+// Monitor URL changes to capture conversation permalinks
+function startUrlMonitoring() {
+  const hostname = window.location.hostname;
+  let lastUrl = window.location.href;
+  let attemptCount = 0;
+  const maxAttempts = 60; // Monitor for up to 30 seconds
+  
+  console.log(`Starting URL monitoring on ${hostname}, initial URL: ${lastUrl}`);
+  
+  urlCheckInterval = setInterval(() => {
+    attemptCount++;
+    const currentUrl = window.location.href;
+    
+    // Log every 10 attempts
+    if (attemptCount % 10 === 0) {
+      console.log(`URL check #${attemptCount}: ${currentUrl}`);
+    }
+    
+    // Check if URL has changed to include conversation ID
+    if (currentUrl !== lastUrl) {
+      console.log(`URL changed from: ${lastUrl}`);
+      console.log(`URL changed to: ${currentUrl}`);
+      lastUrl = currentUrl;
+      
+      let conversationUrl = null;
+      let service = null;
+      
+      if (hostname.includes('chatgpt.com') && currentUrl.includes('/c/')) {
+        conversationUrl = currentUrl;
+        service = 'chatgpt';
+      } else if (hostname.includes('claude.ai') && currentUrl.includes('/chat/')) {
+        conversationUrl = currentUrl;
+        service = 'claude';
+      } else if (hostname.includes('grok.com')) {
+        // Grok might have different URL patterns
+        if (currentUrl !== 'https://grok.com/' && currentUrl.length > 'https://grok.com/'.length) {
+          conversationUrl = currentUrl;
+          service = 'grok';
+        }
+      }
+      
+      if (conversationUrl && currentQuestion) {
+        console.log(`✅ Captured ${service} conversation URL:`, conversationUrl);
+        console.log(`For question:`, currentQuestion);
+        
+        // Send the URL to background script
+        chrome.runtime.sendMessage({
+          action: 'saveConversationUrl',
+          service: service,
+          url: conversationUrl,
+          question: currentQuestion
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error sending message:', chrome.runtime.lastError);
+          } else {
+            console.log('URL sent to background script successfully');
+          }
+        });
+        
+        clearInterval(urlCheckInterval);
+      } else {
+        console.log('URL changed but not a conversation URL or question missing');
+        console.log('conversationUrl:', conversationUrl, 'currentQuestion:', currentQuestion);
+      }
+    }
+    
+    // Stop monitoring after max attempts
+    if (attemptCount >= maxAttempts) {
+      console.log('⏱️ Stopped monitoring URL changes after 30 seconds');
+      clearInterval(urlCheckInterval);
+    }
+  }, 500);
+}
 
 function fillTextIntoInput(text) {
   const hostname = window.location.hostname;

@@ -11,10 +11,18 @@ body {
 }
 
 h1 {
-  margin: 0 0 15px 0;
+  margin: 0 0 5px 0;
   font-size: 20px;
   color: #333;
   text-align: center;
+}
+
+.version {
+  text-align: center;
+  font-size: 10px;
+  color: #999;
+  margin-bottom: 10px;
+  font-family: monospace;
 }
 
 #questionInput {
@@ -75,9 +83,6 @@ h1 {
 
 .history-item {
   padding: 8px;
-  margin-bottom: 5px;
-  background: white;
-  border-radius: 6px;
   font-size: 13px;
   color: #555;
   cursor: pointer;
@@ -100,4 +105,67 @@ h1 {
   color: #999;
   font-size: 13px;
   padding: 20px;
+}
+
+.history-item-container {
+  margin-bottom: 10px;
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ai-buttons {
+  display: flex;
+  gap: 5px;
+  padding: 5px 8px;
+  background: #f9f9f9;
+  border-top: 1px solid #eee;
+}
+
+.ai-link-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chatgpt-btn {
+  background: #10a37f;
+}
+
+.chatgpt-btn:hover {
+  background: #0d8968;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 163, 127, 0.3);
+}
+
+.claude-btn {
+  background: #8b5cf6;
+}
+
+.claude-btn:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.grok-btn {
+  background: #1da1f2;
+}
+
+.grok-btn:hover {
+  background: #1a91da;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(29, 161, 242, 0.3);
+}
+
+.ai-link-btn:active {
+  transform: translateY(0);
 }
