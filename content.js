@@ -237,13 +237,14 @@ function clickSendButton(service) {
       }
     }
   } else if (service === 'claude') {
-    // Claude send button selectors
+    // Claude send button selectors - updated for better accuracy
     const selectors = [
-      'button[aria-label*="Send"]',
-      'button[aria-label*="send"]',
-      'button:has(svg):last-of-type',
-      'button[type="submit"]',
-      'button.bg-black'
+      'button[aria-label="Send message"]',
+      'button[aria-label="Send Message"]',
+      'button:has(svg[viewBox="0 0 24 24"])',
+      'button.text-white:has(svg)',
+      'div[role="textbox"] + button',
+      'button[aria-label*="Send"]'
     ];
     
     for (let i = 0; i < selectors.length; i++) {
@@ -255,13 +256,14 @@ function clickSendButton(service) {
       }
     }
   } else if (service === 'grok') {
-    // Grok send button selectors
+    // Grok send button selectors - avoid search button
     const selectors = [
-      'button[aria-label*="Send"]',
-      'button[aria-label*="send"]',
-      'button:has(svg)',
-      'button[type="submit"]',
-      'button.send-button'
+      'button[aria-label="Send message"]',
+      'button[aria-label*="Send"]:not([aria-label*="Search"])',
+      'textarea + button',
+      'button[type="submit"]:not([aria-label*="Search"])',
+      'button.send-button',
+      'div[role="textbox"] + button'
     ];
     
     for (let i = 0; i < selectors.length; i++) {
@@ -296,16 +298,3 @@ function clickSendButton(service) {
     return false;
   }
 }
-
-// Check for pending text on page load
-window.addEventListener('load', async () => {
-  const result = await chrome.storage.local.get(['pendingText']);
-  if (result.pendingText) {
-    console.log('Found pending text, attempting to fill');
-    setTimeout(() => {
-      fillTextIntoInput(result.pendingText);
-      // Clear pending text
-      chrome.storage.local.remove(['pendingText']);
-    }, 3000); // Wait 3 seconds for page to fully load
-  }
-});

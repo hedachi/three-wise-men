@@ -16,9 +16,6 @@ async function openTabsAndFillText(text) {
     'https://grok.com/'
   ];
   
-  // Store the text to be filled
-  await chrome.storage.local.set({ pendingText: text });
-  
   // Open all tabs
   for (let i = 0; i < urls.length; i++) {
     const tab = await chrome.tabs.create({
