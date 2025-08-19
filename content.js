@@ -17,8 +17,8 @@
     let currentQuestion = null;
     let urlCheckInterval = null;
 
-  // Listen for messages
-  chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+  // Create message handler function
+  const messageHandler = (request, _, sendResponse) => {
     console.log('Received message:', request);
     if (request.action === 'fillText') {
       currentQuestion = request.text;
@@ -30,10 +30,26 @@
       }, 1000); // Wait 1 second for page elements to load
     }
     return true;
-  });
+  };
+  
+  // Remove any existing listeners before adding new one
+  try {
+    chrome.runtime.onMessage.removeListener(messageHandler);
+  } catch (e) {
+    // Ignore if listener doesn't exist
+  }
+  
+  // Add message listener
+  chrome.runtime.onMessage.addListener(messageHandler);
 
   // Monitor URL changes to capture conversation permalinks
   function startUrlMonitoring() {
+    // Clear any existing interval
+    if (urlCheckInterval) {
+      clearInterval(urlCheckInterval);
+      urlCheckInterval = null;
+    }
+    
     const hostname = window.location.hostname;
     let lastUrl = window.location.href;
     let attemptCount = 0;
