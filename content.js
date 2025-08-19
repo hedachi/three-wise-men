@@ -1,17 +1,21 @@
 // Wrap everything in IIFE to avoid variable redeclaration issues
 (() => {
+  'use strict';
+  
   // Check if already initialized
-  if (window.__threeWiseMenInitialized) {
+  if (typeof window.__threeWiseMenInitialized !== 'undefined' && window.__threeWiseMenInitialized === true) {
     console.log('Three Wise Men content script already initialized, skipping...');
     return;
   }
-  window.__threeWiseMenInitialized = true;
   
-  console.log('Three Wise Men content script loaded on:', window.location.hostname);
+  try {
+    window.__threeWiseMenInitialized = true;
+    
+    console.log('Three Wise Men content script loaded on:', window.location.hostname);
 
-  // Track the question text and monitor URL changes
-  let currentQuestion = null;
-  let urlCheckInterval = null;
+    // Track the question text and monitor URL changes
+    let currentQuestion = null;
+    let urlCheckInterval = null;
 
   // Listen for messages
   chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
@@ -413,6 +417,11 @@
       }
       return false;
     }
+  }
+
+  } catch (error) {
+    console.error('Three Wise Men content script error:', error);
+    // Prevent script from crashing
   }
 
 // End of IIFE
