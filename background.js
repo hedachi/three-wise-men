@@ -123,25 +123,20 @@ async function openTabsAndFillText(text) {
       if (tabId === tab.id && info.status === 'complete') {
         chrome.tabs.onUpdated.removeListener(listener);
         
-        // Inject content script and send message
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        }, () => {
-          // Wait a bit for content script to load
-          setTimeout(() => {
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'fillText',
-              text: text
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                console.log('Error:', chrome.runtime.lastError.message);
-              } else {
-                console.log('Text sent to tab:', tab.id);
-              }
-            });
-          }, 1000);
-        });
+        // Content script is already injected via manifest.json
+        // Just send the message after a short delay
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'fillText',
+            text: text
+          }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.log('Error:', chrome.runtime.lastError.message);
+            } else {
+              console.log('Text sent to tab:', tab.id);
+            }
+          });
+        }, 2000); // Wait 2 seconds for content script to be ready
       }
     });
   }

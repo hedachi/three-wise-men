@@ -7,6 +7,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const manifest = chrome.runtime.getManifest();
   document.getElementById('version').textContent = `v${manifest.version}`;
 
+  // Restore saved draft text
+  const savedDraft = localStorage.getItem('questionDraft');
+  if (savedDraft) {
+    questionInput.value = savedDraft;
+  }
+
+  // Auto-save draft text on input
+  questionInput.addEventListener('input', () => {
+    localStorage.setItem('questionDraft', questionInput.value);
+  });
+
   // Load and display history
   await loadHistory();
   
@@ -34,8 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('Message sent to background');
     });
 
-    // Clear input
+    // Clear input and draft
     questionInput.value = '';
+    localStorage.removeItem('questionDraft');
     
     // Close popup after a moment
     setTimeout(() => {
