@@ -9,11 +9,32 @@
 
 ## 使い方
 
+### 通常の使用方法
 1. 拡張機能のアイコンをクリック
 2. 質問を入力
 3. 「3つのAIに送信」ボタンをクリック（または Ctrl+Enter）
 4. ChatGPT、Claude、Grok が新しいタブで開く
 5. 各サイトにテキストが自動入力される
+
+### キーボードショートカット
+- `Command + Shift + Y` (Mac) / `Ctrl + Shift + Y` (Windows): ポップアップを開く
+
+### Raycast統合 (Mac限定)
+Raycastから直接質問を送信できます：
+
+1. **セットアップ**
+   - `raycast-scripts/` フォルダ内のスクリプトをRaycastにインポート
+   - 詳細は `raycast-scripts/README.md` を参照
+
+2. **使い方**
+   - Raycastを開く（`Command + Space`）
+   - "Ask Three Wise Men" と入力
+   - 質問を入力してEnter
+
+### URL経由でのアクセス
+```
+chrome-extension://[EXTENSION_ID]/launcher.html?q=質問内容
+```
 
 ## デバッグ方法
 

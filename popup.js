@@ -138,4 +138,57 @@ document.addEventListener('DOMContentLoaded', async () => {
       sendButton.click();
     }
   });
+
+  // Export to CSV button handler
+  const exportCsvButton = document.getElementById('exportCsvButton');
+  exportCsvButton.addEventListener('click', async () => {
+    const result = await chrome.storage.local.get(['history']);
+    const history = result.history || [];
+    
+    if (history.length === 0) {
+      alert('エクスポートする履歴がありません');
+      return;
+    }
+    
+    // Generate CSV content
+    const csvContent = generateCsvContent(history);
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = new Date();
+    const fileName = `three_wise_men_history_${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  // Generate CSV content from history
+  function generateCsvContent(history) {
+    // CSV header with BOM for Excel compatibility
+    const BOM = '\uFEFF';
+    let csv = BOM + '日時,質問,ChatGPT URL,Claude URL,Grok URL\n';
+    
+    // Add history items
+    history.forEach(item => {
+      const date = new Date(item.timestamp);
+      const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+      
+      // Escape text for CSV (handle quotes and newlines)
+      const escapedText = '"' + item.text.replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+      
+      const chatgptUrl = item.urls?.chatgpt || '';
+      const claudeUrl = item.urls?.claude || '';
+      const grokUrl = item.urls?.grok || '';
+      
+      csv += `${dateStr},${escapedText},${chatgptUrl},${claudeUrl},${grokUrl}\n`;
+    });
+    
+    return csv;
+  }
 });

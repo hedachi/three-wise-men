@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "東方の三賢者",
-  "version": "1.2025.814.1637",
+  "version": "1.2025.827.1628",
   "description": "ChatGPT、Claude、Grokの3つのAIに同時に質問を送信",
   "permissions": [
     "tabs",
@@ -21,6 +21,12 @@
   "action": {
     "default_popup": "popup.html"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["launcher.html", "launcher.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
@@ -31,5 +37,14 @@
       "js": ["content.js"],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Open Three Wise Men popup"
+    }
+  }
 }

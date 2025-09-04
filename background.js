@@ -3,7 +3,7 @@ const conversationUrls = new Map();
 
 // Handle messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
-  if (request.action === 'openAndFill') {
+  if (request.action === 'openAndFill' || request.action === 'openTabsFromLauncher') {
     // Clear previous conversation URLs for new question
     conversationUrls.clear();
     conversationUrls.set('question', request.text);
@@ -34,7 +34,7 @@ async function saveInitialHistory(text, timestamp) {
     urls: {} // Initialize with empty URLs object
   });
   
-  history = history.slice(0, 50);
+  history = history.slice(0, 500);
   
   await chrome.storage.local.set({ history });
   console.log('Saved initial history entry with timestamp:', timestamp);
