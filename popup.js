@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const questionInput = document.getElementById('questionInput');
   const sendButton = document.getElementById('sendButton');
   const historyList = document.getElementById('historyList');
+  const downloadCsvButton = document.getElementById('downloadCsvButton');
 
   // Display version
   const manifest = chrome.runtime.getManifest();
@@ -61,6 +62,63 @@ document.addEventListener('DOMContentLoaded', async () => {
       questionInput.value = e.target.dataset.text;
     }
   });
+
+  // CSV download handler
+  downloadCsvButton.addEventListener('click', async () => {
+    const result = await chrome.storage.local.get(['history']);
+    const history = result.history || [];
+    
+    if (history.length === 0) {
+      alert('ダウンロードする履歴がありません');
+      return;
+    }
+
+    const csvData = generateCsv(history);
+    downloadCsv(csvData);
+  });
+
+  // Generate CSV data
+  function generateCsv(history) {
+    const headers = ['日時', '質問', 'ChatGPT URL', 'Claude URL', 'Grok URL'];
+    const csvRows = [headers.join(',')];
+
+    history.forEach(item => {
+      const date = new Date(item.timestamp);
+      const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      
+      const row = [
+        `"${dateStr}"`,
+        `"${item.text.replace(/"/g, '""')}"`,
+        `"${item.urls?.chatgpt || ''}"`,
+        `"${item.urls?.claude || ''}"`,
+        `"${item.urls?.grok || ''}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    return csvRows.join('\n');
+  }
+
+  // Download CSV file
+  function downloadCsv(csvData) {
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `three_wise_men_history_${dateStr}_${timeStr}.csv`;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+  }
 
   // Load history from storage
   async function loadHistory() {
